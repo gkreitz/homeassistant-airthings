@@ -2,14 +2,22 @@ import logging
 import struct
 import datetime
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.const import (TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pygatt==3.2.0']
 
-MAC = 'XX:XX:XX:XX:XX:XX' # CHANGE ME!
+DOMAIN = 'airthings'
+CONF_MAC = 'mac'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MAC): cv.string,
+})
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=15)
 SENSOR_TYPES = [
@@ -26,13 +34,13 @@ SENSOR_TYPES = [
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    _LOGGER.info("Starting airthings")
-    reader = AirthingsWavePlusDataReader(MAC)
+    _LOGGER.debug("Starting airthings")
+    reader = AirthingsWavePlusDataReader(config.get(CONF_MAC))
     add_devices([ AirthingsSensorEntity(reader, key,name,unit,icon,device_class) for [key, name, unit, icon, device_class] in SENSOR_TYPES])
 
 class AirthingsWavePlusDataReader:
     def __init__(self, mac):
-        self.mac = mac
+        self._mac = mac
         self._state = { }
 
     def get_data(self, key):
@@ -40,9 +48,13 @@ class AirthingsWavePlusDataReader:
             return self._state[key]
         return STATE_UNKNOWN
 
+    @property
+    def mac(self):
+        return self._mac
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        _LOGGER.info("Updating data")
+        _LOGGER.debug("Airthings updating data")
         import pygatt
         from pygatt.backends import Characteristic
         adapter = pygatt.backends.GATTToolBackend()
@@ -50,7 +62,7 @@ class AirthingsWavePlusDataReader:
         try:
             # reset_on_start must be false - reset is hardcoded to do sudo, which does not exist in the hass.io Docker container.
             adapter.start(reset_on_start=False)
-            device = adapter.connect(self.mac)
+            device = adapter.connect(self._mac)
             # Unclear why this does not work. Seems broken in the command line tool too. Hopefully handle is stable...
             #value = device.char_read(char,timeout=10)
             value = device.char_read_handle('0x000d',timeout=10)
@@ -102,6 +114,10 @@ class AirthingsSensorEntity(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
+
+    @property
+    def unique_id(self):
+        return '{}-{}'.format(self._reader.mac, self._name)
 
     def update(self):
         """Fetch new state data for the sensor.
