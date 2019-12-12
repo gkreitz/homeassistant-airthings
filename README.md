@@ -5,7 +5,7 @@ I wanted something to read my Airthings Wave Plus, so I built this. Far from pro
 
 ## Installation
 1. Find out the MAC address of your Airthings Wave Plus. See https://airthings.com/us/raspberry-pi/ for how to find MAC address.
-1. Put `__init__.py`, `sensor.py`, `manifest.json` into `<config>/custom_components/airthings/` on your home assistant installation (where `<config>` is the directory where your config file resides).
+1. This fork made for intergation through HACS.
 1. Add the following to your `configuration.yaml` (or modify your `sensor` heading, if you already have one):
 ```yaml
 sensor:
