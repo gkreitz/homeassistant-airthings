@@ -1,5 +1,7 @@
 # Airthings Wave Plus Environment Sensor for Home Assistant
 
+This was developed by [@gkreitz](https://github.com/gkreitz) and forked from (https://github.com/gkreitz/homeassistant-airthings)
+
 Quick n' dirty hack to get [Airthings Wave Plus](https://amazon.com/Airthings-2930-Quality-Detection-Dashboard/dp/B07JB8QWH6?tag=rynoshark-20) indoor air quality sensors into Home Assistant.
 
 **Beware, very untested. Only works with Airthings Wave Plus.**
