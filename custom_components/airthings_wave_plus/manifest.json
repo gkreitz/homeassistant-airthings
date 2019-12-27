@@ -1,5 +1,5 @@
 {
-	"domain": "wave_plus",
+	"domain": "airthings_wave_plus",
 	"name": "Airthings Wave Plus",
 	"documentation": "https://github.com/gkreitz/homeassistant-airthings",
 	"dependencies": [],
