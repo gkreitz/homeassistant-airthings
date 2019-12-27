@@ -13,6 +13,7 @@ from homeassistant.const import (TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLA
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'airthings_wave_plus'
+
 CONF_MAC = 'mac'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -20,7 +21,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=15)
+
 SENSOR_TYPES = [
+    # key            name                unit          icon         device class
     [ 'temperature', 'Temperature',      TEMP_CELSIUS, None,        DEVICE_CLASS_TEMPERATURE ],
     [ 'co2',         'CO2',              'ppm',        'mdi:cloud', None ],
     [ 'pressure',    'Pressure',         'mbar',       'mdi:gauge', DEVICE_CLASS_PRESSURE ],
@@ -43,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AirthingsWavePlusDataReader:
     def __init__(self, mac):
         self._mac = mac
-        self._state = { }
+        self._state = {}
 
     def get_data(self, key):
         if key in self._state:
@@ -56,27 +59,32 @@ class AirthingsWavePlusDataReader:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        _LOGGER.debug("Airthings updating data")
+        _LOGGER.debug(f"Updating data from Airthings Wave Plus {self._mac}")
+        
         import pygatt
         from pygatt.backends import Characteristic
         adapter = pygatt.backends.GATTToolBackend()
-        char = 'b42e2a68-ade7-11e4-89d3-123b93f75cba'
+        #char = 'b42e2a68-ade7-11e4-89d3-123b93f75cba'
+        
         try:
-            # reset_on_start must be false - reset is hardcoded to do sudo, which does not exist in the hass.io Docker container.
+            # reset_on_start must be false - reset is hardcoded to execute sudo, which doesn't exist
+            # in the hass.io Docker container.
             adapter.start(reset_on_start=False)
             device = adapter.connect(self._mac)
+            
             # Unclear why this does not work. Seems broken in the command line tool too. Hopefully handle is stable...
             #value = device.char_read(char,timeout=10)
             value = device.char_read_handle('0x000d',timeout=10)
             (humidity, light, sh_rad, lo_rad, temp, pressure, co2, voc) = struct.unpack('<xbxbHHHHHHxxxx', value)
-            self._state['humidity'] = humidity / 2.0
-            self._state['light'] = light * 1.0
+            
+            self._state['humidity']    = humidity / 2.0
+            self._state['light']       = light * 1.0
             self._state['short_radon'] = sh_rad
-            self._state['long_radon'] = lo_rad
-            self._state['temperature'] = temp / 100.
-            self._state['pressure'] = pressure / 50.
-            self._state['co2'] = co2 * 1.
-            self._state['voc'] = voc * 1.
+            self._state['long_radon']  = lo_rad
+            self._state['temperature'] = temp / 100.0
+            self._state['pressure']    = pressure / 50.0
+            self._state['co2']         = co2 * 1.0
+            self._state['voc']         = voc * 1.0
         finally:
             adapter.stop()
 
@@ -95,7 +103,7 @@ class AirthingsSensorEntity(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'Airthings {}'.format(self._name)
+        return 'Airthings Wave Plus {}'.format(self._name)
 
     @property
     def icon(self):
@@ -123,7 +131,6 @@ class AirthingsSensorEntity(Entity):
 
     def update(self):
         """Fetch new state data for the sensor.
-
         This is the only method that should fetch new data for Home Assistant.
         """
         self._reader.update()
