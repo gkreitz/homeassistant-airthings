@@ -24,4 +24,5 @@ Then restart Home Assistant and if everything works, you'll have some new sensor
 
 ### See Also
 
+* [Airthings Wave Plus discussion forum on Home Assistant](https://community.home-assistant.io/t/air-quality-monitor-radon-meter-airthings-wave-plus/102836)
 * [Airthings for Home Assistant](https://github.com/custom-components/sensor.airthings_wave) (does not support Wave Plus)
