@@ -1,6 +1,6 @@
 {
-	"domain": "airthings",
-	"name": "Airthings Wave+",
+	"domain": "wave_plus",
+	"name": "Airthings Wave Plus",
 	"documentation": "https://github.com/gkreitz/homeassistant-airthings",
 	"dependencies": [],
 	"requirements": ["pygatt[GATTTOOL]==4.0.3"],

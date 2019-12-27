@@ -12,7 +12,7 @@ from homeassistant.const import (TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLA
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'airthings'
+DOMAIN = 'airthings_wave_plus'
 CONF_MAC = 'mac'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -21,22 +21,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=15)
 SENSOR_TYPES = [
-    ['temperature', 'Temperature', TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    ['co2', 'CO2', 'ppm', 'mdi:cloud', None],
-    ['pressure', 'Pressure', 'mbar', 'mdi:gauge', DEVICE_CLASS_PRESSURE],
-    ['humidity', 'Humidity', '%', None, DEVICE_CLASS_HUMIDITY],
-    ['voc', 'VOC', 'ppm', 'mdi:cloud', None],
-    ['short_radon', 'Short-term Radon', 'Bq/m3', 'mdi:cloud', None],
-    ['long_radon', 'Long-term Radon', 'Bq/m3', 'mdi:cloud', None],
+    [ 'temperature', 'Temperature',      TEMP_CELSIUS, None,        DEVICE_CLASS_TEMPERATURE ],
+    [ 'co2',         'CO2',              'ppm',        'mdi:cloud', None ],
+    [ 'pressure',    'Pressure',         'mbar',       'mdi:gauge', DEVICE_CLASS_PRESSURE ],
+    [ 'humidity',    'Humidity',         '%',          None,        DEVICE_CLASS_HUMIDITY ],
+    [ 'voc',         'VOC',              'ppm',        'mdi:cloud', None ],
+    [ 'short_radon', 'Short-term Radon', 'Bq/m3',      'mdi:cloud', None ],
+    [ 'long_radon',  'Long-term Radon',  'Bq/m3',      'mdi:cloud', None ],
 ]
-
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
-    _LOGGER.debug("Starting airthings")
     reader = AirthingsWavePlusDataReader(config.get(CONF_MAC))
-    add_devices([ AirthingsSensorEntity(reader, key,name,unit,icon,device_class) for [key, name, unit, icon, device_class] in SENSOR_TYPES])
+
+    sensors = []
+    for [key, name, unit, icon, device_class] in SENSOR_TYPES:
+        sensors.append( AirthingsSensorEntity(reader, key, name, unit, icon, device_class) )
+    add_devices(sensors)
 
 class AirthingsWavePlusDataReader:
     def __init__(self, mac):
